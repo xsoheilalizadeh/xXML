@@ -10,6 +10,7 @@ It's an efficient XML writer/reader for .NET, and an alternative for `XElement`.
 - Write ✔
 - Read ❌
 - Indented Format ❌
+- Serialization/Deserialization ❌
 
 ```c#
 var body = new ReadOnlyElement("Body", new ReadOnlyAttr("xmlns", "http://tempuri.org/"))
