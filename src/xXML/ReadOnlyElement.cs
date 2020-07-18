@@ -37,7 +37,7 @@ namespace xXML
 
         public ReadOnlyElement(string name, ReadOnlyAttr attr) : this(name)
         {
-            _attributes.Add(attr);
+            _attributes.Add(attr);    
         }
 
         public ReadOnlyElement(string name, ReadOnlyElement element) : this(name)
@@ -76,6 +76,18 @@ namespace xXML
             WriteFullElement(in writer, this);
         }
 
+        public void WriteTo(in Span<byte> buffer)
+        {
+            WriteFullElement(in buffer, this);
+        }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void WriteFullElement(in Span<byte> buffer, in ReadOnlyElement child)
+        {
+            WriteElement(in buffer, child.Name, child.Value, child._attributes);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void WriteFullElement(in IBufferWriter<byte> writer, in ReadOnlyElement child)
         {
@@ -87,6 +99,30 @@ namespace xXML
             }
 
             EndElement(writer, child.Name);
+        }
+
+        private void WriteElement(in Span<byte> buffer, in ReadOnlySpan<byte> name,
+            in ReadOnlySpan<byte> value, in List<ReadOnlyAttr> attributes)
+        {
+            LessThanSign.CopyTo(buffer);
+            name.CopyTo(buffer);
+            
+            for (int i = 0; i < attributes.Count; i++)
+            {
+                var attr = attributes[i];
+                
+                WhiteSpace.CopyTo(buffer);
+                attr.Name.CopyTo(buffer);
+                EqualSign.CopyTo(buffer);
+                
+                
+                DoubleQuote.CopyTo(buffer);
+                attr.Value.CopyTo(buffer);
+                DoubleQuote.CopyTo(buffer);
+            }
+            
+            GreaterThanSign.CopyTo(buffer);
+            value.CopyTo(buffer);
         }
 
         private void WriteElement(in IBufferWriter<byte> writer, in ReadOnlySpan<byte> name,
@@ -111,6 +147,13 @@ namespace xXML
             writer.Write(GreaterThanSign);
 
             writer.Write(value);
+        }
+
+        private void EndElement(in Span<byte> buffer, in ReadOnlySpan<byte> name)
+        {
+            CloseElementSign.CopyTo(buffer);
+            name.CopyTo(buffer);
+            GreaterThanSign.CopyTo(buffer);
         }
 
         private void EndElement(in IBufferWriter<byte> writer, in ReadOnlySpan<byte> name)
